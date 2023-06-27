@@ -8,8 +8,8 @@ import pandas as pd
 
 response_data = []
 low = 0
-high = 10000
-offset = 40
+high = 40
+offset = 40000
 
 def extract_users_from_directory():
     for i in range(low, high, offset):

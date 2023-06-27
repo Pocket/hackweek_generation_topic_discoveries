@@ -13,7 +13,7 @@ offset = 40
 
 def extract_users_from_directory():
     for i in range(low, high, offset):
-        response = requests.get(f"https://mastodon.social/api/v1/directory?offset={i}&limit={i+40}")
+        response = requests.get(f"https://mastodon.social/api/v1/directory?offset={i}&limit={i+offset}")
         response_data.append(json.loads(response.text))
         if i %1000 == 0:
             print(f"completed extracting {i} users from the directory")

@@ -59,3 +59,6 @@ def clean_string(text, stem="None"):
     final_string = ' '.join(text_stemmed)
 
     return final_string if len(final_string) <= 512 else final_string[:512]
+
+def make_clickable(link):
+    return f'<a target="_blank" href="{link}">{link}</a>'

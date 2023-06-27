@@ -2,14 +2,15 @@ import json
 import requests
 import pandas as pd
 
-#URL = 'https://mastodon.social/api/v1/timelines/public'
-URL = 'https://mozilla.social/api/v1/timelines/public'
+
+URL = 'https://mastodon.social/api/v1/timelines/public'
+# URL = 'https://mozilla.social/api/v1/timelines/public'
 params = {
     'limit': 40
 }
 
 #since = pd.Timestamp('now', tz='utc') - pd.DateOffset(hour=10)
-since = pd.Timestamp('now', tz='utc') - pd.DateOffset(7)
+since = pd.Timestamp('now', tz='utc') - pd.DateOffset(1)
 is_end = False
 
 results = []
@@ -45,6 +46,4 @@ while True:
         print(f"len(results) = {len(results)}")
     
 df = pd.DataFrame(results)
-# print(len(df))
-# print(df.head(20))
-df.to_parquet('data/toots_mozilla_social_last_1_week.parquet')
+df.to_parquet('data/toots_mastodon_social_last_1_day.parquet')

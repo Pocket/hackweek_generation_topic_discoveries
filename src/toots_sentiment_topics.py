@@ -27,9 +27,11 @@ os.makedirs(results_path, exist_ok=True)
 
 def read_toots_data() -> pd.DataFrame:
     """read the extracted toots data"""
-    datasets = glob.glob("data/*.parquet")
+    datasets = glob.glob("data/toots_mastodon*.parquet")
     df = pd.concat([pd.read_parquet(data) for data in datasets], axis=0)
-    return df
+    df = df[(df['content'].apply(len) < 256) & (df['language'] == 'en')]
+    df = df[~df['content'].isna()].reset_index(drop=True)
+    return df #.sample(2000)  ## smaple of 3000 toots
 
 def perform_sentiment_analysis(df) -> pd.DataFrame:
     sent_scores = sentiment_pipeline(df['content_cleaned'].str.lower().values.tolist())
@@ -72,13 +74,16 @@ def predict_topic(text):
 def main():
     df = read_toots_data()
     print("Number of toots = ", len(df))
-    df['content_cleaned'] = df['content'].apply(clean_html).apply(clean_string)
+    df['content_cleaned'] = df['content'].fillna('').apply(clean_html).apply(clean_string)
+    
     # perform sentiment analysis
     df_with_sentiments = perform_sentiment_analysis(df)
+    df_with_sentiments = df_with_sentiments[~df_with_sentiments['content_cleaned'].isna()]
+    print("Number of toots after data cleansing = ", len(df_with_sentiments))
     df_topics = df_with_sentiments['content_cleaned'].apply(predict_topic)
     df_with_sentiments['topics'] = df_topics
 
-    df_with_sentiments.to_parquet("../data/results/df_with_sentiments_and_topics.parquet")
+    df_with_sentiments.to_parquet(f"{results_path}/df_mastodon_with_sentiments_and_topics.parquet")
 
 if __name__ == '__main__':
     main()

@@ -62,3 +62,50 @@ def clean_string(text, stem="None"):
 
 def make_clickable(link):
     return f'<a target="_blank" href="{link}">{link}</a>'
+
+from transformers import AutoModelForSequenceClassification, TFAutoModelForSequenceClassification
+from transformers import AutoTokenizer
+from scipy.special import expit
+import numpy as np
+
+
+MODEL = f"cardiffnlp/tweet-topic-21-multi"
+tokenizer = AutoTokenizer.from_pretrained(MODEL)
+
+model = AutoModelForSequenceClassification.from_pretrained(MODEL)
+class_mapping = model.config.id2label
+
+
+def predict_topic(text):
+    """Predict the topics using the model (https://huggingface.co/cardiffnlp/tweet-topic-21-multi)
+    0: arts_&_culture 	
+    1: business_&_entrepreneurs 	
+    2: celebrity_&_pop_culture 	
+    3: diaries_&_daily_life 	
+    4: family 		
+    5: fashion_&_style 	
+    6: film_tv_&_video 	
+    7: fitness_&_health 	
+    8: food_&_dining 	
+    9: gaming 	
+    10: learning_&_educational 	
+    11: music 	
+    12: news_&_social_concern 	
+    13: other_hobbies 	
+    14: relationships 
+    15: science_&_technology
+    16: sports
+    17: travel_&_adventure
+    18: youth_&_student_life
+    """
+    tokens = tokenizer(text, return_tensors='pt')
+    output = model(**tokens)
+
+    scores = output[0][0].detach().numpy()
+    scores = expit(scores)
+    predictions = (scores >= 0.5) * 1
+
+    result_topics = []
+    for cls_idx in np.where(predictions)[0]:
+        result_topics.append(class_mapping[cls_idx])
+    return result_topics

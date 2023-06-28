@@ -19,7 +19,6 @@ df = pd.read_parquet('data/results/df_mastodon_with_sentiments_and_topics.parque
 df = df[['content_cleaned', 'label', 'score', 'topics']].rename(
     columns={'content_cleaned': 'toots',
              'label': 'sentiment',
-            #  'score': 'sentiment_score',
              }
 )
 df = df[~df['sentiment'].isna()]
@@ -37,7 +36,7 @@ topics_list = mlb.classes_
 topic_selected = st.selectbox("Choose the topic of your interest", topics_list)
 with st.expander("**:green[Topic sentiments and trending hashtags]**", expanded=True):
     
-    col1, col2 = st.columns([5,4], gap='small')
+    col1, col2, col3 = st.columns([3,2,3])
     with col1:
 
         toots_for_this_topic = df[df_final[topic_selected] == 1] \
@@ -46,10 +45,12 @@ with st.expander("**:green[Topic sentiments and trending hashtags]**", expanded=
                                     ascending = [False, False]
                                     )
         st.write(toots_for_this_topic.reset_index(drop=True))
+    with col2:
         st.write(f"Sentiments and counts for topic {topic_selected}")
         st.write(toots_for_this_topic['sentiment'].value_counts().reset_index() \
                     .rename(columns={'index': 'Sentiment', 'sentiment':'counts'}))
-    with col2:
+
+    with col3:
         trends = []
         for trend in json.loads(response.text):
             trends.append({'trend': trend['name'],

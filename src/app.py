@@ -59,3 +59,17 @@ with st.expander("**:green[Topic sentiments]**", expanded=True):
         trends_df = pd.DataFrame(trends)
         trends_df['url'] = trends_df['url'].apply(make_clickable)
         st.write(trends_df.to_html(escape=False, index=False), unsafe_allow_html=True)
+
+
+approved_items = pd.read_csv("data/approved_with_topic_scores.csv")
+approved_publishers = pd.read_csv("data/publishers_with_topic_scores.csv")
+approved_items["URL"] = approved_items["URL"].apply(make_clickable)
+st.write(f"Approved Items for {topic_selected}:")
+disp = approved_items.sort_values(by=topic_selected, ascending=False).head(30)
+disp = disp[["TITLE", "TOP_DOMAIN_NAME", "URL"]].reset_index()
+st.write(disp.to_html(escape=False, index=False), unsafe_allow_html=True)
+
+st.write(f"Top approved Publishers for {topic_selected}")
+disp = approved_publishers.sort_values(by=topic_selected, ascending=False).head(10)
+st.write(disp[["TOP_DOMAIN_NAME"]].reset_index())
+

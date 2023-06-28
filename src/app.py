@@ -11,7 +11,7 @@ response = requests.get("https://mastodon.social//api/v1/trends/tags")
 statuses = json.loads(response.text) # this converts the json to a python list of dictionary
 
 st.set_page_config(layout="wide")
-st.title("Toots Sentiments and topics")
+st.title("Toots Sentiments, topics and related Pocket contents")
 
 
 # df = pd.read_parquet('data/output/df_with_sentiments_and_topics.parquet')

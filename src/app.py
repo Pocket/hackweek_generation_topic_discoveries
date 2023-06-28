@@ -19,7 +19,7 @@ df = pd.read_parquet('data/results/df_mastodon_with_sentiments_and_topics.parque
 df = df[['content_cleaned', 'label', 'score', 'topics']].rename(
     columns={'content_cleaned': 'toots',
              'label': 'sentiment',
-             'score': 'sentiment_score',
+            #  'score': 'sentiment_score',
              }
 )
 df = df[~df['sentiment'].isna()]
@@ -35,41 +35,42 @@ df_final = df.join(pd.DataFrame(mlb.fit_transform(df.pop('topics')),
 
 topics_list = mlb.classes_
 topic_selected = st.selectbox("Choose the topic of your interest", topics_list)
-with st.expander("**:green[Topic sentiments]**", expanded=True):
-    col1, col2, col3 = st.columns([4,2,3], gap='small')
+with st.expander("**:green[Topic sentiments and trending hashtags]**", expanded=True):
+    
+    col1, col2 = st.columns([5,4], gap='small')
     with col1:
 
         toots_for_this_topic = df[df_final[topic_selected] == 1] \
                                 .sort_values(
-                                    ['sentiment','sentiment_score'],
+                                    ['sentiment','score'],
                                     ascending = [False, False]
                                     )
-        st.write(toots_for_this_topic)
+        st.write(toots_for_this_topic.reset_index(drop=True))
+        st.write(f"Sentiments and counts for topic {topic_selected}")
+        st.write(toots_for_this_topic['sentiment'].value_counts().reset_index() \
+                    .rename(columns={'index': 'Sentiment', 'sentiment':'counts'}))
     with col2:
-        plt.figure(figsize=(5,5))
-        fig, ax = plt.subplots()
-        toots_for_this_topic['sentiment'].value_counts().plot(kind='barh')
-        plt.title(f"Topic {topic_selected} by sentiments")
-        st.pyplot(fig)
-    with col3:
         trends = []
         for trend in json.loads(response.text):
             trends.append({'trend': trend['name'],
                            'url': trend['url']})
         trends_df = pd.DataFrame(trends)
         trends_df['url'] = trends_df['url'].apply(make_clickable)
+        
         st.write(trends_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 
 
 approved_items = pd.read_csv("data/approved_with_topic_scores.csv")
 approved_publishers = pd.read_csv("data/publishers_with_topic_scores.csv")
-approved_items["URL"] = approved_items["URL"].apply(make_clickable)
-st.write(f"Approved Items for {topic_selected}:")
-disp = approved_items.sort_values(by=topic_selected, ascending=False).head(30)
-disp = disp[["TITLE", "TOP_DOMAIN_NAME", "URL"]].reset_index()
-st.write(disp.to_html(escape=False, index=False), unsafe_allow_html=True)
-
-st.write(f"Top approved Publishers for {topic_selected}")
-disp = approved_publishers.sort_values(by=topic_selected, ascending=False).head(10)
-st.write(disp[["TOP_DOMAIN_NAME"]].reset_index())
+with st.expander(f"**:green[Approved articles & publishers from pocket for the topic {topic_selected}]**", expanded=True):
+    col1, col2 = st.columns([4,2], gap='small')
+    with col1:
+        approved_items["URL"] = approved_items["URL"].apply(make_clickable)
+        disp = approved_items.sort_values(by=topic_selected, ascending=False).head(25)
+        disp = disp[["TITLE", "TOP_DOMAIN_NAME", "URL"]].reset_index(drop=True)
+        st.write(disp.to_html(escape=False, index=False), unsafe_allow_html=True)
+    with col2:
+        st.write(f"Top approved Publishers for {topic_selected}")
+        disp = approved_publishers.sort_values(by=topic_selected, ascending=False).head(10)
+        st.write(disp[["TOP_DOMAIN_NAME"]].reset_index(drop=True))
 

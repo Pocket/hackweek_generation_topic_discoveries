@@ -26,11 +26,16 @@ def extract_users_feeds(users_list):
     for i, user_id in enumerate(users_list):
         if i % 10 == 0:
             print(f"completed fetching statuses of {i} users")
+            print(f"total records fetched = {len(response_content_data)}")
         
         for i in range(low, high, offset):
             response = requests.get(f"https://mastodon.social/api/v1/accounts/{user_id}/statuses?offset={i}&limit={i+offset}")
-            response_content_data.append(json.loads(response.text))
-    user_feeds_df = pd.concat([pd.DataFrame(block) for block in response_content_data], axis=0).reset_index(drop=True)
+            json_data = response.json()
+            try:
+                response_content_data.append(pd.DataFrame.from_dict(json_data))
+            except ValueError:
+                continue
+    user_feeds_df = pd.concat(response_content_data, axis=0)
     user_feeds_df['user_id'] = user_feeds_df['account'].apply(lambda details: details['id'])
     print(len(user_feeds_df))
     user_feeds_df.to_parquet("data/2023-06-27_users_feeds_df_1k.parquet")

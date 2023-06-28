@@ -9,8 +9,9 @@ URL = 'https://mastodon.social/api/v1/timelines/public'
 # URL = 'https://mozilla.social/api/v1/timelines/public'
 params = {
     'limit': 40,
-    'max_id': '110613808387143738'  # Set if we want to continue from previous run
+    'max_id': '110441093346155330'  # Set if we want to continue from previous run
 }
+
 
 # since = pd.Timestamp('now', tz='utc') - pd.DateOffset(hour=10)
 
@@ -44,7 +45,7 @@ def dump_current_results(dfs):
         return
 
     toot_day_df = pd.concat(dfs)
-    min_time = toot_day_df['created_at'].min()
+    min_time = datetime.fromtimestamp(toot_day_df['created_at_ts'].median())
     toot_day_df.to_parquet(f'data/toots_mastodon_social_{min_time}.parquet')
 
 
@@ -74,8 +75,9 @@ while True:
         print(f"Found {len(null_ts)} invalid timestamps")
         should_dump = True
 
-    toots_dfs.append(toot_df)
     toot_df['created_at_ts'] = toot_df['created_at'].apply(lambda x: pd.Timestamp(x).timestamp())
+    toot_df = toot_df.sort_values('created_at_ts')
+    toots_dfs.append(toot_df)
     med_time = toot_df['created_at_ts'].median()
     if med_time <= since_day_ts or (LIMIT_PER_DAY and LIMIT_PER_DAY > len(toots_dfs)):
         should_dump = True

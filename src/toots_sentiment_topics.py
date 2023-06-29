@@ -27,11 +27,12 @@ os.makedirs(results_path, exist_ok=True)
 
 def read_toots_data() -> pd.DataFrame:
     """read the extracted toots data"""
-    datasets = glob.glob("data/toots_mastodon*.parquet")
+    # datasets = glob.glob("data/toots_mastodon*.parquet")
+    datasets = glob.glob("jag_data/replied_toots_2023_05_27/*toots_mastodon_social_*.parquet")
     df = pd.concat([pd.read_parquet(data) for data in datasets], axis=0)
     df = df[(df['content'].apply(len) < 256) & (df['language'] == 'en')]
     df = df[~df['content'].isna()].reset_index(drop=True)
-    return df #.sample(2000)  ## smaple of 3000 toots
+    return df.sample(5000)  ## smaple of 5000 toots
 
 def perform_sentiment_analysis(df) -> pd.DataFrame:
     sent_scores = sentiment_pipeline(df['content_cleaned'].str.lower().values.tolist())

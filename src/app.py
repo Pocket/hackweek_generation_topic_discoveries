@@ -23,7 +23,7 @@ df = df[['content_cleaned', 'label', 'score', 'topics']].rename(
 # df = df[~df['sentiment'].isna()]
 st.write("Toots with sentiments and topics")
 with st.expander("**:green[Toots and topic distribution]**", expanded=True):
-    col1, col2,  = st.columns([5,3], gap="small")
+    col1, col2, col3  = st.columns([5,4, 4], gap="small")
     with col1:
 
         st.write("#toots", len(df))
@@ -42,6 +42,15 @@ with st.expander("**:green[Toots and topic distribution]**", expanded=True):
         topic_dist['Counts'].plot(kind='barh')
         plt.title("Topic distribution of toots")
         st.pyplot(fig)
+    with col3:
+        approved_items = pd.read_csv("data/approved_with_topic_scores.csv")
+        corpus_topic_dist = pd.DataFrame((approved_items[topics_list]>=0.5).sum()).rename(columns={0: 'Counts'}).sort_values('Counts')
+        plt.figure(figsize=(6, 6))
+        fig, ax = plt.subplots()
+        corpus_topic_dist['Counts'].plot(kind='barh')
+        plt.title("Approved Corpus Topic distribution")
+        st.pyplot(fig)
+    
 topic_selected = st.selectbox("Choose the topic of your interest", topics_list)
 with st.expander("**:green[Topic sentiments and trending hashtags]**", expanded=True):
     
@@ -70,7 +79,6 @@ with st.expander("**:green[Topic sentiments and trending hashtags]**", expanded=
         st.write(trends_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 
 
-approved_items = pd.read_csv("data/approved_with_topic_scores.csv")
 approved_publishers = pd.read_csv("data/publishers_with_topic_scores.csv")
 st.write("Number of approved items = ", len(approved_items))
 with st.expander(f"**:green[Approved articles & publishers from pocket for the topic {topic_selected}]**", expanded=True):
@@ -84,4 +92,3 @@ with st.expander(f"**:green[Approved articles & publishers from pocket for the t
         st.write(f"Top approved Publishers for {topic_selected}")
         disp = approved_publishers.sort_values(by=topic_selected, ascending=False).head(10)
         st.write(disp[["TOP_DOMAIN_NAME"]].reset_index(drop=True))
-

@@ -6,12 +6,12 @@ import tarfile
 import pandas as pd
 import glob
 from utils import clean_html, clean_string, predict_topic
+from sklearn.preprocessing import MultiLabelBinarizer
   
-COLS_TO_BE_SELECTED = ['user_id', 'note_cleaned', 'content_cleaned', 'username', 'display_name']
+COLS_TO_BE_SELECTED = ['user_id', 'followers_count', 'note_cleaned', 'content_cleaned', 'username', 'display_name']
 
 def extract_from_tar_file():
     file = tarfile.open('/Users/cgopal/Downloads/replied_toots_2023_05_27.tar.gz')
-    # print(file.getnames())
     file.extractall('./jag_data')
     file.close()
 
@@ -19,6 +19,7 @@ def read_data_from_extracted_dir():
     datasets = glob.glob('./jag_data/replied_toots_2023_05_27/*.parquet')
     df = pd.concat([pd.read_parquet(data) for data in datasets], axis=0)
     df['user_id'] = df['account'].apply(lambda details: details['id'])
+    df['followers_count'] = df['account'].apply(lambda details: details['followers_count'])
     df['note'] = df['account'].apply(lambda details: details['note'])
     df['display_name'] = df['account'].apply(lambda details: details['display_name'])
     df['username'] = df['account'].apply(lambda details: details['username'])
@@ -39,6 +40,11 @@ def obtain_topics_for_content(df_cleaned):
     df_cleaned['topics'] = df_cleaned['content_cleaned'].apply(predict_topic)
     return df_cleaned
 
+def get_summary_by_user_topics(df_for_discovery):
+    mlb = MultiLabelBinarizer()
+    df_summarized_by_user = df_for_discovery[['user_id', 'note_cleaned', 'username', 'display_name']].join(pd.DataFrame(mlb.fit_transform(df_for_discovery['topics']), columns=mlb.classes_, index=df_for_discovery.index))
+    df_for_discovery = df_summarized_by_user.groupby(['user_id', 'note_cleaned', 'username', 'display_name']).sum().reset_index()
+    return df_for_discovery
 
 if __name__ == '__main__':
     extract_from_tar_file()
@@ -46,6 +52,8 @@ if __name__ == '__main__':
     df_users_and_notes = clean_text(df)
     df_for_discovery = obtain_topics_for_content(df_users_and_notes)
     print(f"Number of rows in df_for_discovery = {len(df_for_discovery)}")
+    df_for_discovery = get_summary_by_user_topics(df_for_discovery)
     print("df_for_discovery \n")
     print(df_for_discovery.head())
+    print(df_for_discovery.columns)
     df_for_discovery.to_parquet("data/results/df_for_discovery.parquet")

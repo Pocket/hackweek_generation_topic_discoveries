@@ -10,13 +10,13 @@ from utils import clean_html, clean_string, predict_topic
 COLS_TO_BE_SELECTED = ['user_id', 'note_cleaned', 'content_cleaned', 'username', 'display_name']
 
 def extract_from_tar_file():
-    file = tarfile.open('/Users/cgopal/Downloads/replied_toots_2023_05_27.tar.gz')
+    file = tarfile.open('./data2/replied_toots_2023_05_27.tar.gz')
     # print(file.getnames())
-    file.extractall('./jag_data')
+    file.extractall('./data2/')
     file.close()
 
 def read_data_from_extracted_dir():
-    datasets = glob.glob('./jag_data/replied_toots_2023_05_27/*.parquet')
+    datasets = glob.glob('./data2/replied_toots_2023_05_27/*.parquet')
     df = pd.concat([pd.read_parquet(data) for data in datasets], axis=0)
     df['user_id'] = df['account'].apply(lambda details: details['id'])
     df['note'] = df['account'].apply(lambda details: details['note'])
@@ -44,6 +44,7 @@ if __name__ == '__main__':
     extract_from_tar_file()
     df = read_data_from_extracted_dir()
     df_users_and_notes = clean_text(df)
+    print(f"Starting Prediction for {len(df_users_and_notes)}.  This will take a while")
     df_for_discovery = obtain_topics_for_content(df_users_and_notes)
     print(f"Number of rows in df_for_discovery = {len(df_for_discovery)}")
     print("df_for_discovery \n")

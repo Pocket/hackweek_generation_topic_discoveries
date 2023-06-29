@@ -4,7 +4,7 @@ from utils import predict_topic
 
 st.set_page_config(layout="wide")
 st.title("[Draft] Community discovery App")
-COLS_TOBE_SELECTED = ['user_id','note','content', 'username','display_name']
+COLS_TOBE_SELECTED = ['user_id', 'note', 'content', 'username', 'display_name']
 context = """:blue[_Help identify some User communities in Mastodon based on topics and keywords_]"""
 st.markdown(context)
 

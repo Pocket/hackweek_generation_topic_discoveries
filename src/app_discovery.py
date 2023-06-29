@@ -4,19 +4,31 @@ from utils import predict_topic
 
 st.set_page_config(layout="wide")
 st.title("[Draft] Community discovery App")
-COLS_TOBE_SELECTED = ['user_id', 'note', 'content', 'username', 'display_name']
+COLS_TOBE_SELECTED = ['user_id', 'content', 'username', 'display_name', 'degree', 'betweenness_centrality', 'clust_coefficient', 'closeness_centrality', 'eigenvector_centrality']
 context = """:blue[_Help identify some User communities in Mastodon based on topics and keywords_]"""
 st.markdown(context)
 
 
-def get_public_toots_data():
-    df = pd.read_parquet("data/results/df_for_discovery.parquet")
-    return df.rename(columns={'note_cleaned': 'note',
-                              'content_cleaned': 'content'})
+
+def get_public_toots_topic_data():
+    df = pd.read_parquet("data/results/df_for_discovery_35k_full.parquet")
+    return df
+
+def get_centality_data():
+    df = pd.read_parquet("data/results/centrality_15K.parquet")
+    return df
 
 
-df = get_public_toots_data()
-topics_list = list(set([topic for topics in df['topics'].values.tolist() for topic in topics]))
+
+
+toots_df = get_public_toots_topic_data()
+centrality_df = get_centality_data()
+merged_df = toots_df.merge(centrality_df, left_on='user_id', right_on='ID', how='left')
+
+st.write("Columns= {} len={}".format(merged_df.columns, len(merged_df)))
+
+
+topics_list = list(set([topic for topics in merged_df['topics'].values.tolist() for topic in topics]))
 topic_selected = st.selectbox("Choose a topic", topics_list + ['custom'])
 if topic_selected == 'custom':
     keyword = st.text_input('Enter the topic keyword of your choice')
@@ -28,7 +40,7 @@ if topic_selected == 'custom':
         st.write("Try another keyword")
     
 
-result = df[df['topics'].apply(lambda t: topic_selected in t)][COLS_TOBE_SELECTED]
+result = merged_df[merged_df['topics'].apply(lambda t: topic_selected in t)][COLS_TOBE_SELECTED]
 if topic_selected == 'custom' and topic_selected is not None:
     st.write(f"Number of users found for {keyword} = {result['user_id'].nunique()}")
 else:

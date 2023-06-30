@@ -22,6 +22,11 @@ For Topic Discoveries app:
 For Topic Discoveries app:
 ```
  1. mkdir data
- 2. python src/discovery_data_prep.py
- 3. streamlit run src/app_discovery.py
+ 2. python src/data_extraction.py
+ 3. python src/data_extract_status.py
+ 4. python src/discovery_data_prep.py
+ 5. streamlit run src/app_discovery.py
+ 
+ alse
+ 6. jupyter-notebook
 ```

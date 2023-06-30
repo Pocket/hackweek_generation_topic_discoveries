@@ -47,16 +47,18 @@ else:
 
 result = result.drop_duplicates(['user_id'], keep='first')
 
-column_weights = [1.0, 4]
-cols = st.columns(len(COLS_TOBE_SELECTED))
+display_columns = COLS_TOBE_SELECTED
+display_columns.remove('display_name')
+column_weights = [3, 8, 1, 1, 1]
+cols = st.columns(column_weights)
 
-for col, field in zip(cols, COLS_TOBE_SELECTED):
-    col.write("**" + field + "**")
+for col, field in zip(cols, display_columns):
+    col.write("**" + field.split('_')[0] + "**")
 
 for i, row in result.iloc[0:100].iterrows():
-    cols = st.columns(len(COLS_TOBE_SELECTED))
+    cols = st.columns(column_weights)
 
-    for c, col_name in enumerate(COLS_TOBE_SELECTED):
+    for c, col_name in enumerate(display_columns):
         if col_name == 'content':
             cols[c].markdown(row[col_name], unsafe_allow_html=True)
         elif col_name == "user_id":

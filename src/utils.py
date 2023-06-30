@@ -1,5 +1,6 @@
 import re
 import string
+from time import sleep, time
 
 import nltk
 import spacy
@@ -115,3 +116,22 @@ def predict_topic(text):
     except Exception as e:
         result_topics = ['unknown']
     return result_topics
+
+
+
+class RateLimiter:
+    def __init__(self, min_update_interval_seconds: float) -> None:
+        self._min_update_interval_seconds = min_update_interval_seconds
+        self._last_update: float = time()
+
+    def wait(self) -> float:
+        now = time()
+        delta = now - self._last_update
+        wait = max(self._min_update_interval_seconds - delta, 0)
+        if wait != 0:
+            sleep(wait)
+        self._last_update = now
+        return delta - self._min_update_interval_seconds
+
+    def reset(self) -> None:
+        self._last_update = time()

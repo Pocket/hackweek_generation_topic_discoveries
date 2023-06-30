@@ -5,11 +5,13 @@ from time import sleep, time
 import pandas as pd
 import requests
 
+from src.utils import RateLimiter
+
 URL = 'https://mastodon.social/api/v1/timelines/public'
 # URL = 'https://mozilla.social/api/v1/timelines/public'
 params = {
-    'limit': 40,
-    'max_id': '110441093346155330'  # Set if we want to continue from previous run
+    'limit': 40,  # the max allowed is 40
+    # 'max_id': '110441093346155330'  # Set if we want to continue from previous run
 }
 
 
@@ -22,22 +24,6 @@ SINCE_DT = (datetime.utcnow() - timedelta(days=DAYS_TOTAL))
 should_dump = False
 
 
-class RateLimiter:
-    def __init__(self, min_update_interval_seconds: float) -> None:
-        self._min_update_interval_seconds = min_update_interval_seconds
-        self._last_update: float = time()
-
-    def wait(self) -> float:
-        now = time()
-        delta = now - self._last_update
-        wait = max(self._min_update_interval_seconds - delta, 0)
-        if wait != 0:
-            sleep(wait)
-        self._last_update = now
-        return delta - self._min_update_interval_seconds
-
-    def reset(self) -> None:
-        self._last_update = time()
 
 
 def dump_current_results(dfs):

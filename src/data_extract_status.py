@@ -6,6 +6,8 @@ from time import sleep, time
 import pandas as pd
 import requests
 
+from src.utils import RateLimiter
+
 # Following status urls
 
 
@@ -16,25 +18,6 @@ mastodon_host = "https://mastodon.social"
 reblogged = "/api/v1/statuses/{}/reblogged_by"
 favorited = "/api/v1/statuses/{}/favourited_by"
 replies = "/api/v1/statuses/{}/context"
-
-
-class RateLimiter:
-    def __init__(self, min_update_interval_seconds: float) -> None:
-        self._min_update_interval_seconds = min_update_interval_seconds
-        self._last_update: float = time()
-
-    def wait(self) -> float:
-        now = time()
-        delta = now - self._last_update
-        wait = max(self._min_update_interval_seconds - delta, 0)
-        if wait != 0:
-            sleep(wait)
-        self._last_update = now
-        return delta - self._min_update_interval_seconds
-
-    def reset(self) -> None:
-        self._last_update = time()
-
 
 def dump_current_results(dfs):
     if len(dfs) <= 0:

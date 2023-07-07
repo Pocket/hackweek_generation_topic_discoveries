@@ -1,11 +1,12 @@
 import re
 import string
-from bs4 import BeautifulSoup
-import spacy
+from time import sleep, time
+
 import nltk
+import spacy
+from bs4 import BeautifulSoup
 from nltk.stem import PorterStemmer
 from nltk.stem.wordnet import WordNetLemmatizer
-import spacy
 
 nlp = spacy.load('en_core_web_sm')
 
@@ -17,6 +18,7 @@ def clean_html(html):
         # Remove tags
         data.decompose()
     return ' '.join(soup.stripped_strings)
+
 
 def clean_string(text, stem="None"):
     """Clean the text"""
@@ -45,7 +47,7 @@ def clean_string(text, stem="None"):
 
     # Stem or Lemmatize
     if stem == 'Stem':
-        stemmer = PorterStemmer() 
+        stemmer = PorterStemmer()
         text_stemmed = [stemmer.stem(y) for y in text_filtered]
     elif stem == 'Lem':
         lem = WordNetLemmatizer()
@@ -60,14 +62,15 @@ def clean_string(text, stem="None"):
 
     return final_string if len(final_string) <= 512 else final_string[:512]
 
+
 def make_clickable(link):
     return f'<a target="_blank" href="{link}">{link}</a>'
 
-from transformers import AutoModelForSequenceClassification, TFAutoModelForSequenceClassification
+
+from transformers import AutoModelForSequenceClassification
 from transformers import AutoTokenizer
 from scipy.special import expit
 import numpy as np
-
 
 MODEL = f"cardiffnlp/tweet-topic-21-multi"
 tokenizer = AutoTokenizer.from_pretrained(MODEL)
@@ -98,14 +101,37 @@ def predict_topic(text):
     17: travel_&_adventure
     18: youth_&_student_life
     """
-    tokens = tokenizer(text, return_tensors='pt')
-    output = model(**tokens)
 
-    scores = output[0][0].detach().numpy()
-    scores = expit(scores)
-    predictions = (scores >= 0.5) * 1
+    try:
+        tokens = tokenizer(text, return_tensors='pt')
+        output = model(**tokens)
 
-    result_topics = []
-    for cls_idx in np.where(predictions)[0]:
-        result_topics.append(class_mapping[cls_idx])
+        scores = output[0][0].detach().numpy()
+        scores = expit(scores)
+        predictions = (scores >= 0.5) * 1
+
+        result_topics = []
+        for cls_idx in np.where(predictions)[0]:
+            result_topics.append(class_mapping[cls_idx])
+    except Exception as e:
+        result_topics = ['unknown']
     return result_topics
+
+
+
+class RateLimiter:
+    def __init__(self, min_update_interval_seconds: float) -> None:
+        self._min_update_interval_seconds = min_update_interval_seconds
+        self._last_update: float = time()
+
+    def wait(self) -> float:
+        now = time()
+        delta = now - self._last_update
+        wait = max(self._min_update_interval_seconds - delta, 0)
+        if wait != 0:
+            sleep(wait)
+        self._last_update = now
+        return delta - self._min_update_interval_seconds
+
+    def reset(self) -> None:
+        self._last_update = time()
